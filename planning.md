@@ -9,27 +9,26 @@
 
 ## Domain
 
-<!-- What domain did you choose? Why is this knowledge valuable and hard to find through official channels? -->
+The domain of this project is the USF Computer Science Survival Guide (Unofficial Student Knowledge System). It focuses on student-generated and experience-based information about computer science courses, professors, and academic planning at the University of South Florida.
+
+This knowledge is valuable because it helps students make informed decisions about course selection, professor difficulty, and degree planning based on real student experiences rather than official course descriptions. It is difficult to find through official channels because university catalogs and departmental websites only provide formal information such as prerequisites and course objectives, while omitting practical insights like teaching style, workload difficulty, grading patterns, and student experiences.
 
 ---
 
 ## Documents
 
-<!-- List your specific sources: URLs, subreddit names, forum threads, or file descriptions.
-     Aim for at least 10 sources that together cover different subtopics or perspectives within your domain. -->
-
 | # | Source | Description | URL or location |
-|---|--------|-------------|-----------------|
-| 1 | | | |
-| 2 | | | |
-| 3 | | | |
-| 4 | | | |
-| 5 | | | |
-| 6 | | | |
-| 7 | | | |
-| 8 | | | |
-| 9 | | | |
-| 10 | | | |
+|---|--------|-------------|------------------|
+| 1 | USF CS Professors Dataset (JSON file) | Rate My Professors export for 20 USF CS faculty: aggregate quality and difficulty scores, would-take-again rates, rating distributions, and full student review text tied to specific courses (e.g., CDA3201), plus tags like "Amazing lectures" and "Tough grader" | `documents/dataset_rate-my-professors.json` |
+| 2 | Official USF CS program information | USF's authoritative BS in Computer Science page covering admission requirements, degree objectives, core curriculum structure, and formal course expectations—useful as a baseline against which student experiences can be compared | `documents/usf_bscs_page.txt` — https://www.usf.edu/ai-cybersecurity-computing/academics/undergraduate/bscs.aspx |
+| 3 | COP3514 Programming Concepts (r/USF) | Thread on COP 3514 (program design) covering perceived difficulty, project workload, exam style, and professor-specific advice from students who have taken the course | `documents/reddit_cop3514.txt` — https://www.reddit.com/r/USF/comments/13ewl3y/program_design_cop_3514/ |
+| 4 | COP2510 Difficulty | Thread focused on COP 2510 (introductory programming): how steep the learning curve feels, time commitment, common pitfalls for new CS students, and tips for succeeding in a first coding course | `documents/reddit_cop2510.txt` — https://www.reddit.com/r/USF/comments/yn7dtp/cop_2510_difficulty/ |
+| 5 | USF CS Degree Flowchart | Visual degree plan showing prerequisite chains, recommended semester-by-semester course order, gen-ed slots, and elective windows—helps answer "what should I take next?" and "what unlocks what?" | `documents/usf_cs_plan.pdf` |
+| 6 | r/USF CS Program Opinion Thread (Need Your Opinion) | Open-ended student opinions on the overall USF CS program: strengths and weaknesses, department culture, internship and career outcomes, and whether the degree feels worth the effort | `documents/reddit_program_opinion.txt` — https://www.reddit.com/r/USF/comments/1rroyo1/need_your_opinion/ |
+| 7 | r/USF CS Course Load & Difficulty Discussion | Practical advice on juggling a job with CS coursework, with firsthand difficulty ratings for COP 2513 (programming II) and MAD 2104 (discrete math) and how those courses compare in weekly hours | `documents/reddit_course_load.txt` — https://www.reddit.com/r/USF/comments/7bu5tk/how_hard_are_these_classes_will_working_be_too/ |
+| 8 | r/USF “Easiest CS Electives” Thread | Crowdsourced elective picks students consider low-stress, including which upper-level CS courses have lighter workloads, easier grading, or less prerequisite depth | `documents/reddit_easiest_electives.txt` — https://www.reddit.com/r/USF/comments/7k07b8/easiest_cs_electives/ |
+| 9 | USF CS Student Study Guides Repository (GitHub) | Community-maintained repo of course-specific study guides, exam reviews, and reference sheets for core CS classes (data structures, discrete math, computer organization, and related topics)—student-authored supplements to lecture material | `documents/github_cse_resources.txt`, `documents/github_cop3514_exam1_review.txt` — https://github.com/aeckar/usf-cse-resources |
+| 10 | USF Computer Science Program Student Experience Discussion (r/USF) | Long-form thread from current and alumni CS majors on day-to-day program life: professor quality, course rigor, languages and tools taught, research opportunities, and how well the curriculum prepared them for internships and jobs | `documents/reddit_cs_experience.txt` — https://www.reddit.com/r/USF/comments/s4ht3j/anyone_here_in_usf_computer_science_department/ |
 
 ---
 

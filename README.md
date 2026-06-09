@@ -42,6 +42,53 @@ This knowledge is valuable because official USF pages describe prerequisites and
 
 **Final chunk count:** 142 chunks from 128 ingested documents.
 
+### Sample Chunks
+
+**Chunk 1 — Source: `documents/dataset_rate-my-professors.json` (professor summary)**
+
+```
+Professor: Rangachar Kasturi
+Department: Computer Science
+Overall Rating: 4.2
+Difficulty: 3.5
+Would Take Again: 100%
+Rating Breakdown: Awesome: 7, Great: 2, Good: 0, OK: 0, Awful: 1
+```
+
+**Chunk 2 — Source: `documents/dataset_rate-my-professors.json` (professor review)**
+
+```
+Professor: Rangachar Kasturi
+Course: CDA3201
+Quality Rating: 5.0
+Tags: Amazing lectures, Caring
+Student Review: Doctor Kasturi is one of the best professors I have ever had. His lectures are very clear...
+```
+
+**Chunk 3 — Source: `documents/usf_cs_plan.pdf` (page 1)**
+
+```
+USF CS Degree Plan (usf_cs_plan) — Page 1
+Computer Science B.S.C.S.
+4-Year Plan of Study
+Potential Entry Level Job Titles: Software Developer, Software Tester, Software Engineer...
+```
+
+**Chunk 4 — Source: `documents/github_cop3514_exam1_review.txt`**
+
+```
+Study Guide: COP 3514 Program Design - Exam 1 Review (USF CSE Resources)
+COP 3514 Program Design - Exam 1 Review
+textbook | c compiler
+```
+
+**Chunk 5 — Source: `documents/reddit_cop2510.txt` (POST section)**
+
+```
+Reddit Thread: COP 2510 Difficulty
+POST: I am taking this class next spring with Dr Small... Is getting a minimum of B in this class difficult since you need a B to continue your CS degree
+```
+
 ---
 
 ## Embedding Model
@@ -49,6 +96,48 @@ This knowledge is valuable because official USF pages describe prerequisites and
 **Model used:** `all-MiniLM-L6-v2` via `sentence-transformers`, integrated with ChromaDB. It is lightweight, runs locally, and is sufficient for a ~142-chunk corpus of short English text about courses and professors.
 
 **Production tradeoff reflection:** With no cost constraint, I would compare models with longer context windows to reduce chunking artifacts, and domain-tuned or API-hosted embeddings (e.g., OpenAI `text-embedding-3-large`) for better retrieval of course codes and professor names. Tradeoffs include latency (local vs API), hosting cost, multilingual support (not needed here), and accuracy on informal student writing vs formal catalog text. For this corpus size, local MiniLM keeps the pipeline simple and free to run.
+
+---
+
+## Retrieval Tests
+
+Each test shows the query and the top 3 chunks returned by `retrieve()` (cosine distance — lower is more similar).
+
+### Test 1 — Professor query
+
+**Query:** What do students say about Rangachar Kasturi?
+
+| Rank | Distance | Source | Chunk preview |
+|------|----------|--------|---------------|
+| 1 | 0.333 | `dataset_rate-my-professors.json` — review, CDA3201 | "Student Review: Kasturi is very knowledgeable and a good lecturer, also very friendly..." |
+| 2 | 0.336 | `dataset_rate-my-professors.json` — review, CDA3201 | "Student Review: one of the best professors in comp sci... breaks things down..." |
+| 3 | 0.355 | `dataset_rate-my-professors.json` — review, CDA3201 | "Student Review: one of the best professors I have ever had. His lectures are very clear..." |
+
+**Why these chunks are relevant:** The query names a specific professor. Each returned chunk is a complete Rate My Professors review where "Rangachar Kasturi" appears in both the text and metadata, so embedding similarity is high. Because ingestion emits one review per document, each chunk contains a full student opinion rather than a fragment.
+
+### Test 2 — Course difficulty query
+
+**Query:** How hard is COP 3514 according to students?
+
+| Rank | Distance | Source | Chunk preview |
+|------|----------|--------|---------------|
+| 1 | 0.480 | `reddit_cop3514.txt` — COMMENT (Wolverine002) | "I personally had so much struggle in CDA but pass COP without much prep..." |
+| 2 | 0.567 | `reddit_cop3514.txt` — COMMENT (vjosa_e_larget) | "As for Computer Organization, that's a class you want to study significantly for..." |
+| 3 | 0.571 | `reddit_cop3514.txt` — COMMENT (findingTheWay97) | "Overall they are not very TOUGH courses but there is a very large amount of information..." |
+
+**Why these chunks are relevant:** Course-code boosting pulls chunks from `reddit_cop3514.txt` when the query mentions COP 3514. The top hit is a student comment comparing COP 3514 difficulty to CDA. Hits 2 and 3 are from the same thread and discuss workload and difficulty, though they mix COP and CDA content — a known limitation of this corpus.
+
+### Test 3 — Program opinion query
+
+**Query:** What do students think about the USF CS program overall?
+
+| Rank | Distance | Source | Chunk preview |
+|------|----------|--------|---------------|
+| 1 | 0.180 | `reddit_program_opinion.txt` — POST | "I was admitted to USF... I am gonna major in CS, I would just love to hear the overall experience..." |
+| 2 | 0.232 | `reddit_program_opinion.txt` — COMMENT (Status-Suggestion620) | "USF is not a good school for computer science. It's ranked #422 globally..." |
+| 3 | 0.327 | `reddit_program_opinion.txt` — COMMENT (sept27) | "The CS department is a travesty and the quality of the education is extremely subpar..." |
+
+**Why these chunks are relevant:** All three hits come from the same Reddit thread titled "Need your opinion - USF CS Program Experience." The low distances (0.18–0.33) show strong semantic match with a broad program-level question. The comments directly express student opinions about the CS program — both negative rankings and department quality criticism.
 
 ---
 
@@ -70,6 +159,83 @@ Rules:
 Retrieved chunks are formatted as numbered context blocks (`[Document 1 — Professor review — Kasturi (CDA3201)]`) and passed in the user message alongside the question. The LLM (`llama-3.3-70b-versatile` via Groq) receives no other context. Temperature is set to 0.2 to reduce creative guessing.
 
 **How source attribution is surfaced in the response:** The LLM is instructed to cite professor names, course codes, and thread titles in its answer. The Gradio UI also shows a **Retrieved sources** panel listing each hit with a human-readable label (e.g., "Professor review — Kasturi (CDA3201)"), similarity distance, optional URL link, chunk position, and a text preview.
+
+### Example System Responses (with source attribution)
+
+**Query:** What do students say about Rangachar Kasturi?
+
+**System response:**
+
+> According to the provided documents, students have overwhelmingly positive reviews about Professor Rangachar Kasturi. They describe him as:
+>
+> - "very knowledgeable and a good lecturer, also very friendly" (Document 1)
+> - "one of the best professors in comp sci" (Document 2)
+> - "one of the best professors I have ever had" (Document 3)
+> - Making complex material "easy to understand" and "interesting" (Documents 2, 3, and 4)
+>
+> Students also appreciate his teaching style, noting that he "breaks things down to where they make sense" (Document 2), gives "amazing lectures" (Document 3), and has "clear grading criteria" (Document 4).
+
+**Query:** What do students think about the USF CS program overall?
+
+**System response:**
+
+> Based on the provided Reddit thread, "Need your opinion - USF CS Program Experience", opinions about the USF CS program vary among students.
+>
+> Some students have expressed negative experiences, with one commenter (sept27) stating that the "CS department is a travesty and the quality of the education is extremely subpar." Another commenter (Status-Suggestion620) mentioned that USF is ranked #422 globally for computer science, according to US News.
+>
+> On the other hand, one student shared a positive experience, stating that they had a great time, got three internships, and worked in two labs during their time at USF. Overall, students have mixed opinions about the USF CS program.
+
+### Out-of-Scope Query (refusal example)
+
+**Query:** What is the best pizza restaurant near USF campus?
+
+**System response:**
+
+> I don't have enough information in the provided sources to answer your question about the best pizza restaurant near USF campus. The context documents only discuss the USF computer science department, professor ratings, and do not mention pizza restaurants.
+
+This shows grounding working correctly — the LLM refuses to answer rather than invent a restaurant recommendation.
+
+---
+
+## Query Interface
+
+The app is a **Gradio web UI** launched with `python app.py` at `http://127.0.0.1:7860`.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| **Status** | Text (read-only) | Shows index readiness, e.g. "Index ready — 142 chunks embedded with all-MiniLM-L6-v2." |
+| **Your question** | Text input | User types a natural-language question; Enter or the Ask button submits it. |
+| **Examples** | Clickable list | Five pre-loaded example questions (COP 3514, Kasturi, electives, COP 2510, program opinion). |
+| **Answer** | Markdown | Grounded response from Groq with inline source references. |
+| **Retrieved sources** | Markdown | Numbered list of chunks used — label, distance score, URL link, and text preview. |
+
+### Sample Interaction Transcript
+
+```
+Status: Index ready — 142 chunks embedded with all-MiniLM-L6-v2.
+
+Your question: What do students say about Rangachar Kasturi?
+
+[User clicks Ask]
+
+Status: Answer generated from retrieved sources.
+
+Answer:
+According to the provided documents, students have overwhelmingly positive reviews
+about Professor Rangachar Kasturi. They describe him as "very knowledgeable and a
+good lecturer, also very friendly" (Document 1) and "one of the best professors
+I have ever had" (Document 3). Students appreciate his clear lectures, helpful TAs,
+and accessible office hours.
+
+Retrieved sources:
+1. Professor review — Rangachar Kasturi (CDA3201) (distance: 0.333)
+   Professor: Rangachar Kasturi | Course: CDA3201 | Student Review: Kasturi is very
+   knowledgeable and a good lecturer, also very friendly...
+2. Professor review — Rangachar Kasturi (CDA3201) (distance: 0.336)
+   Student Review: one of the best professors in comp sci...
+3. Professor review — Rangachar Kasturi (CDA3201) (distance: 0.355)
+   Student Review: one of the best professors I have ever had...
+```
 
 ---
 
@@ -119,4 +285,10 @@ The original spec described simple pass-through chunking for small documents, bu
 - *What I gave the AI:* The professor JSON structure, the `BaseAdapter` contract, and the requirement to emit one document per review (not one per professor).
 - *What it produced:* `ProfessorJSONAdapter` with `_build_review_text`, `_build_summary_text`, metadata fields, and `_append_line` to skip null values.
 - *What I changed or overrode:* Added null stripping in `BaseAdapter.build_document()` for all adapters (required by ChromaDB), and verified review text omits lines like `Grade Received: None` instead of printing nulls literally.
+
+**Instance 2**
+
+- *What I gave the AI:* The chunking strategy from planning.md (500 chars / 75 overlap / 800 pass-through), the existing ingest pipeline, Groq API requirements, and the project rubric sections for retrieval tests and grounded generation.
+- *What it produced:* `chunk_documents.py`, `retrieval/vector_store.py`, `generation/generate.py`, and `app.py` Gradio UI wiring the full RAG pipeline.
+- *What I changed or overrode:* After COP 3514 and electives test failures, I directed the AI to split Reddit threads by comment in `TextAdapter`, add course-code boosting and neighbor expansion in `retrieve()`, and move the sources panel out of a collapsed accordion. I also ran all 5 evaluation questions myself and wrote honest partially-accurate / inaccurate judgments rather than editing results to look perfect.
 

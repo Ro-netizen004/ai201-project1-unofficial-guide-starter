@@ -120,8 +120,3 @@ The original spec described simple pass-through chunking for small documents, bu
 - *What it produced:* `ProfessorJSONAdapter` with `_build_review_text`, `_build_summary_text`, metadata fields, and `_append_line` to skip null values.
 - *What I changed or overrode:* Added null stripping in `BaseAdapter.build_document()` for all adapters (required by ChromaDB), and verified review text omits lines like `Grade Received: None` instead of printing nulls literally.
 
-**Instance 2**
-
-- *What I gave the AI:* The chunking strategy from planning.md (500 chars / 75 overlap / 800 pass-through), the existing ingest pipeline, and the project requirement for ChromaDB + Gradio.
-- *What it produced:* `chunk_documents.py`, `vector_store.py`, `generate.py`, and `app.py` wiring ingest → chunk → embed → retrieve → Groq → UI.
-- *What I changed or overrode:* After COP 3514 test failures, I directed the AI to split Reddit threads by comment, add course-code boosting at retrieval time, and move the sources panel out of a collapsed accordion so retrieved chunks are visible during evaluation.
